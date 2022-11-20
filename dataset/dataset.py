@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 from datasets import load_dataset
+import random
 
 
 def getIMDB(dev_size=0.1):
@@ -13,27 +14,28 @@ def getIMDB(dev_size=0.1):
 
     return train_data, dev_data, test_data
 
-def collate_fn(batch,tokenizer,train=False):
+
+def collate_fn(batch, tokenizer, train=False):
     processed_batch = {}
     batch_size = len(batch)
     if train:
-        texts,augs = [],[]
+        texts, augs = [], []
         for sample in batch:
             texts.append(sample['ori_input'])
             augs.append(sample['aug_input'])
             # batch_token = tokenizer(sum([sents, result1, result2], []), padding='longest', return_tensors='pt', return_token_type_ids=True)
 
-        max_length = tokenizer(texts, padding='longest', return_tensors='pt')['input_ids'].size(1)*2
+        max_length = tokenizer(texts, padding='longest', return_tensors='pt')['input_ids'].size(1)
         batch_token = tokenizer(sum([texts, augs], []),
                                 max_length=max_length, truncation=True, padding='max_length', return_tensors='pt',
                                 return_token_type_ids=True)
         # retokenize
         processed_batch['ori_inputs'] = {'input_ids': batch_token['input_ids'][:batch_size],
-                                          'attention_mask': batch_token['attention_mask'][:batch_size],
-                                          'token_type_ids': batch_token['token_type_ids'][:batch_size]}
+                                         'attention_mask': batch_token['attention_mask'][:batch_size],
+                                         'token_type_ids': batch_token['token_type_ids'][:batch_size]}
         processed_batch['aug_inputs'] = {'input_ids': batch_token['input_ids'][batch_size:],
-                                          'attention_mask': batch_token['attention_mask'][batch_size:],
-                                          'token_type_ids': batch_token['token_type_ids'][batch_size:]}
+                                         'attention_mask': batch_token['attention_mask'][batch_size:],
+                                         'token_type_ids': batch_token['token_type_ids'][batch_size:]}
         processed_batch['labels'] = torch.tensor([sample['label'] for sample in batch])
     else:
         sents = [sample['ori_input'] for sample in batch]
@@ -42,9 +44,8 @@ def collate_fn(batch,tokenizer,train=False):
     return processed_batch
 
 
-
 class IMDBDataset(Dataset):
-    def __init__(self, dataset,train=False):
+    def __init__(self, dataset, train=False):
         super(IMDBDataset, self).__init__()
 
         self.train = train
@@ -54,7 +55,10 @@ class IMDBDataset(Dataset):
         self.text = [data['text'] for data in dataset]
 
         if train:
-            self.aug_text = [" [SEP] ".join(data['text'].split(" ")) for data in dataset]
+            tokens_list = [data['text'].split(" ") for data in dataset]
+            for tokens in tokens_list:
+                tokens.insert(random.randint(0, len(tokens)), '[SEP]')
+            self.aug_text = [" ".join(tokens) for tokens in tokens_list]
 
     def __getitem__(self, index):
         if self.train:

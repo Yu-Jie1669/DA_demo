@@ -248,6 +248,7 @@ if __name__ == "__main__":
                 {"params": model.module.dense.parameters(), "lr": args.lrlast},
             ])
     else:
+        model = model.cuda()
         optimizer = AdamW(
             [
                 {"params": model.bert.parameters(), "lr": args.lrbase},
