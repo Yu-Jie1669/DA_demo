@@ -4,8 +4,8 @@ from datasets import load_dataset
 
 
 def getIMDB(dev_size=0.1):
-    ds = load_dataset('imdb', split='train')
-    test_data = load_dataset('imdb', split='test')
+    ds = load_dataset('./dataset/imdb.py', split='train')
+    test_data = load_dataset('./dataset/imdb.py', split='test')
     train_data, dev_data = ds.train_test_split(test_size=dev_size, seed=42).values()
 
     for data in train_data:
@@ -54,7 +54,7 @@ class IMDBDataset(Dataset):
         self.text = [data['text'] for data in dataset]
 
         if train:
-            self.aug_text = [data['aug_text'] for data in dataset]
+            self.aug_text = [" [SEP] ".join(data['text'].split(" ")) for data in dataset]
 
     def __getitem__(self, index):
         if self.train:

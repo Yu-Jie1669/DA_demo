@@ -134,7 +134,7 @@ def train_aug(train_loader, model, optimizer):
 
     pbar = tqdm(train_loader)
     for batch_idx, batch in enumerate(pbar):
-        orig_inputs, aug_inputs, targets = batch['ori_input'], batch['aug_input'], batch['label']
+        orig_inputs, aug_inputs, targets = batch['ori_inputs'], batch['aug_inputs'], batch['labels']
         for k, v in orig_inputs.items(): orig_inputs[k] = v.cuda()
         for k, v in aug_inputs.items(): aug_inputs[k] = v.cuda()
 
